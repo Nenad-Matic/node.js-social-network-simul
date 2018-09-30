@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>30hills internship - test app - Nenad Matic</title>
+
+    <script type="text/javascript">
+
+        var alreadyLoaded = false;
+
+        function loadPeople() {
+            if (alreadyLoaded)
+                return;
+            var listOfPeople;
+
+            const Http = new XMLHttpRequest();
+            Http.responseType = "json";
+            const url='/getall';
+            Http.open("POST", url);
+            Http.send();
+            Http.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    listOfPeople = Http.response;
+                    console.log(listOfPeople);
+                    var numberOfPoeple = listOfPeople.length;
+                    for (var i = 0; i < numberOfPoeple; i++) {
+                        createRow(listOfPeople[i]);
+                    }
+                }
+            }
+            alreadyLoaded = true;
+        }
+
+        function createRow(currentPerson) {
+            const numberOfCells = 3;
+            if (document.getElementById("tableID")==null) {
+                // create table
+                var myTable = document.createElement("table");
+                myTable.id = "tableID";
+                var myTableBody = document.createElement("tbody");
+                myTableBody.id = "tableBodyID";
+
+                myTable.appendChild(myTableBody);
+                var div = document.getElementById("div-table");
+                div.appendChild(myTable);
+                myTable.style.border = "3px solid black";
+
+            }
+            var table = document.getElementById("tableID");
+            var tbody = document.getElementById("tableBodyID");
+            var trow = document.createElement("tr");
+
+            var cell1 = document.createElement("td");
+            cell1.innerHTML = "<a href='javascript:void(0);' onclick='showInfoAboutPerson("+ currentPerson.id +")'>" + currentPerson.firstName + "</a>";
+            trow.appendChild(cell1);
+
+            var cell2 = document.createElement("td");
+            cell2.innerHTML = currentPerson.surname;
+            trow.appendChild(cell2);
+
+            var cell3 = document.createElement("td");
+            cell3.innerHTML = currentPerson.id;
+            trow.appendChild(cell3);
+
+            tbody.appendChild(trow);
+
+        }
+
+        // print person info
+        function showInfoAboutPerson (personID) {
+            const Http = new XMLHttpRequest();
+            Http.responseType = "json";
+            const url='/getinfo?id='+personID;
+            Http.open("POST", url, true);
+            Http.send();
+            Http.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var currentPerson = Http.response;
+                    console.log(currentPerson);
+                    showPersonInfo(currentPerson);
+                }
+            }
+        }
+        function showPersonInfo (personToShowInfo) {
+            console.log(personToShowInfo.id);
+            var divInfo = document.getElementById('div-info');
+            document.getElementById('div-friends').innerHTML = "";
+            document.getElementById('div-fof').innerHTML = "";
+            document.getElementById('div-suggested').innerHTML = "";
+            divInfo.innerHTML = "<p>Info about " + personToShowInfo.firstName +" "+ personToShowInfo.surname + "</p>" +
+                "<p> Age: " + personToShowInfo.age + ", gender: " + personToShowInfo.gender + " <br> " +
+                "<br><button onclick='requestFriends("+personToShowInfo.id+")'>show friends</button> <br>" +
+                "<br><button onclick='requestFriendsOfFriends("+ personToShowInfo.id + ")'>show friends of friends</button> <br>" +
+                "<br><button onclick='requestSuggested(" + personToShowInfo.id + ")'>show suggested friends</button></p>";
+
+        }
+
+
+        function requestFriends (personID) {
+            const Http = new XMLHttpRequest();
+            Http.responseType = "json";
+            const url='/getfriends?id='+personID;
+            Http.open("POST", url, true);
+            Http.send();
+
+            Http.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var listOfFriends = Http.response;
+                    if (listOfFriends == null) {
+                        console.log("server error: list of friends is null");
+                        return;
+                    }
+                    printFriends(listOfFriends);
+                }
+            }
+        }
+        function printFriends (listOfFriends) {
+            var divInfo = document.getElementById('div-friends');
+            divInfo.innerHTML = "<h3>Friends:</h3>";
+
+
+            if (listOfFriends.length == 0) {
+                //showNoFriends();
+                var par = document.createElement('p');
+                par.innerHTML = "This person is very lonely, since it has no friends... at least not online!";
+                return;
+            }
+            for (var i = 0; i<listOfFriends.length; i++) {
+                var par = document.createElement('p');
+                par.innerHTML = (i+1) + ": " +listOfFriends[i].firstName + " " + listOfFriends[i].surname;
+                divInfo.appendChild(par);
+            }
+        }
+
+        function requestFriendsOfFriends (personID) {
+            const Http = new XMLHttpRequest();
+            Http.responseType = "json";
+            const url='/getfriendsoffriends?id='+personID;
+            Http.open("POST", url, true);
+            Http.send();
+
+            Http.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var listOfFoF = Http.response;
+                    console.log(listOfFoF);
+                    if (listOfFoF == null) {
+                        return;
+                    }
+                    printFriendsOfFriends(listOfFoF);
+                }
+            }
+        }
+        function printFriendsOfFriends(listOfFoF) {
+            var divInfo = document.getElementById('div-fof');
+            divInfo.innerHTML = "<h3>Friends of friends:</h3>";
+
+
+            if (listOfFoF.length == 0) {
+                //showNoFriends();
+                var par = document.createElement('p');
+                par.innerHTML = "None";
+                return;
+            }
+            for (var i = 0; i<listOfFoF.length; i++) {
+                var par = document.createElement('p');
+                par.innerHTML = (i+1) +": "+listOfFoF[i].firstName + " " + listOfFoF[i].surname;
+                divInfo.appendChild(par);
+            }
+        }
+
+        function requestSuggested(personID) {
+            const Http = new XMLHttpRequest();
+            Http.responseType = "json";
+            const url='/getsuggested?id='+personID;
+            Http.open("POST", url, true);
+            Http.send();
+
+            Http.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    var listOfSuggested = Http.response;
+                    if (listOfSuggested == null) {
+                        console.log("server error: list of suggested friends is null");
+                        return;
+                    }
+                    printSuggested(listOfSuggested);
+                }
+            }
+        }
+        function printSuggested(listOfSuggested) {
+            const divSuggested = document.getElementById('div-suggested');
+            divSuggested.innerHTML = "<h3>Suggested friends:</h3>";
+
+            for (var i = 0; i<listOfSuggested.length; i++) {
+                var par = document.createElement('p');
+                par.innerHTML = (i+1) +": " + listOfSuggested[i].firstName + " " + listOfSuggested[i].surname;
+                divSuggested.appendChild(par);
+            }
+        }
+
+    </script>
+</head>
+<body>
+
+
+    <div id="div-buttons" style="display: inline-block; height: fit-content;">
+        <button onclick="loadPeople()">Show Everybody</button>
+    </div>
+    <div id="div-table" style="display: inline-block;">
+
+    </div>
+
+    <div id="div-info" style="display: inline-block;">
+
+    </div>
+    <div id="div-friends" style="display: inline-block;">
+
+    </div>
+    <div id="div-fof" style="display: inline-block;">
+
+    </div>
+    <div id="div-suggested" style="display: inline-block;">
+
+    </div>
+
+</body>
+</html>
