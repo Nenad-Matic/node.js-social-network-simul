@@ -1,6 +1,6 @@
 # 30hillsTEST
 
-To start the server, navigate to directory and execute "node ./server.js"
+To start the server, navigate to root directory and execute "node ./server.js"
 
 This is a simple social network simulation web app, written in JavaScript with nodejs and express framework
 
