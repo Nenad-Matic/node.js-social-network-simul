@@ -6,7 +6,8 @@ This is a simple social network simulation web app, written in JavaScript with n
 
 I have very little experience in javascript/express and no experience in web development whatsoever so my code is probably more Java-ish than it should be.
 
-
+Dependencies:
+1. Node.JS
 
 
 
