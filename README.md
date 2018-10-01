@@ -9,14 +9,6 @@ I have very little experience in javascript/express and no experience in web dev
 Dependencies:
 1. Node.JS
 
-
-
-
-
-
 TODO improvements
-1. there is no database implementation. The data is read from supplied json file and loaded as an object array at runtime. This is flawed; nonetheless it served well for demo.
-2. organize server-side files and functions
-3. organize client-side files and functions
-4. gui for demo
-5. tidy up
+1. there is no database implementation. The data is read from supplied json file and loaded as an object array at runtime. This is flawed for many reasons; nonetheless it served well for a demo.
+2. organize client-side files and functions and improve GUI/graphics of the demo
