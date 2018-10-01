@@ -1,9 +1,6 @@
 // server.js
 // called on app start
 
-const bodyParser = require("body-parser");
-
-// since this is a demo app, implementing a real database would be an overkill
 // data.json will be used to read data from synchronously
 // this works fine because the data is relatively small
 // also no manipulation of the data is required
@@ -11,13 +8,19 @@ const bodyParser = require("body-parser");
 const filesystem = require("fs");
 const dataObj = JSON.parse(filesystem.readFileSync('data/data.json', 'utf8'));
 
+// obvious improvement is to implement a database and not keep data as JS array
+
+
+
+// initializing the server
 
 const app = require("express")();
 const port = 8812;
-
 app.listen(port, function() {
     console.log("Listening on " + port);
 });
+
+// handler functions
 
 function rootHandler(request, response) {
     console.log(port + ": " + "connected to root.");
@@ -41,76 +44,63 @@ function getInfo (req, res) {
 }
 
 function getFriends (req, res) {
-    const receivedID = req.query.id;
-    const person = findPersonById(receivedID);
+    const personID = req.query.id;
+    const person = findPersonById(personID);
     const IdsOfFriends = person.friends;
+    var arrayOfFriends = [];
 
-    var friendsJson;
+    for (var j = 0; j<IdsOfFriends.length; j++) {
+        arrayOfFriends.push(findPersonById(IdsOfFriends[j]));
+    }
 
-    // the following code is very suspicious... as suspicious as chess camp kids
-    // hope nobody reads it before it's rewritten.
+    const friendsJSON = JSON.stringify(arrayOfFriends);
+    console.log((port + ": requested friends of " + person.firstName +
+        " " + person.surname + " (id = " + person.id + ")"));
 
-    if (IdsOfFriends.length==0) {
-        return res.send("[]");
-    } else
-        if (IdsOfFriends.length==1) {
-            friendsJson = "[" + JSON.stringify(findPersonById(IdsOfFriends[0])) + "]";
-            res.send(friendsJson);
-        } else
-            for (var i=0; i<IdsOfFriends.length; i++) {
-                // if first
-                if (i == 0) {
-                    friendsJson = "[" + JSON.stringify(findPersonById(IdsOfFriends[i]));
-                    continue;
-                }
-
-                // if anything inbetween
-                if (i !== IdsOfFriends.length -1 && i !== 0) {
-                    friendsJson = friendsJson.concat(",");
-                    friendsJson = friendsJson.concat(JSON.stringify(findPersonById(IdsOfFriends[i])));
-                }
-
-                // if last
-                if (i == IdsOfFriends.length - 1) {
-                    friendsJson = friendsJson.concat(",");
-                    friendsJson = friendsJson.concat (JSON.stringify(findPersonById(IdsOfFriends[i])));
-                    friendsJson = friendsJson.concat("]");
-                    break;
-                }
-            }
-
-    console.log(port + ": requested friends of " + person.firstName +
-        " " + person.surname + " (id = " + person.id + ")");
-    return res.send(friendsJson);
-
+    return res.send(friendsJSON);
 }
+
 function getFriendsOfFriends (req, res) {
     var personID = req.query.id;
     var person = findPersonById(personID);
     const IdsOfFriends = person.friends;
 
     var IdsOfFriendsOfFriends = [];
+    var arrayOfFriendsOfFriends = [];
 
+    // first for goes trough persons direct friends
     for (var i = 0; i<IdsOfFriends.length; i++) {
+
         var currentFriend = findPersonById(IdsOfFriends[i]);
+
+        // 2nd for goes trough that particular friend's friends
         for (var j = 0; j<currentFriend.friends.length; j++) {
+
+            // if that friend was already added to the list of friends of friends
+            // (perhaps from some other friend)
+            // then just skip to the next step of 2nd for
             if (IdsOfFriendsOfFriends.includes(currentFriend.friends[j]))
                 continue;
-            else
-                IdsOfFriendsOfFriends.push (currentFriend.friends[j]);
+            else {
+                // since the person is a friend of friend and it has not been added to the list
+                // then we have a new person to add to our list! Hooray
+
+                IdsOfFriendsOfFriends.push(currentFriend.friends[j]);
+
+                //added
+                arrayOfFriendsOfFriends.push(findPersonById(currentFriend.friends[j]));
+            }
         }
     }
 
-    var arrayOfFriendsOfFriends = [];
-    for (var k = 0; k<IdsOfFriendsOfFriends.length; k++) {
-        arrayOfFriendsOfFriends.push(findPersonById(IdsOfFriendsOfFriends[k]));
-    }
+
     var fofJSON = JSON.stringify(arrayOfFriendsOfFriends);
 
     console.log(port + ": requested friends of friends of " + person.firstName +
         " " + person.surname + " (id = " + person.id + ")");
     return res.send(fofJSON);
 }
+
 function getSuggestedFriends (req, res) {
     const personID = req.query.id;
     const person = findPersonById(personID);
@@ -152,7 +142,7 @@ function getSuggestedFriends (req, res) {
     return res.send(suggestJSON);
 }
 
-// utility funct
+// utility functions (or rather function..?)
 
 function findPersonById(id) {
     var personWithThatID;
@@ -165,6 +155,8 @@ function findPersonById(id) {
     return personWithThatID;
 }
 
+
+// server route methods
 
 app.get('/', rootHandler);
 
