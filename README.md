@@ -1,8 +1,12 @@
 # 30hillsTEST
 
+This is a simple social network simulation web app, written in JavaScript with nodejs and express framework
+
 To start the server, navigate to root directory and execute "node ./server.js"
 
-This is a simple social network simulation web app, written in JavaScript with nodejs and express framework
+Relevant code is found in server.js and default.html
+
+
 
 I have very little experience in javascript/express and no experience in web development whatsoever so my code is probably more Java-ish than it should be.
 
